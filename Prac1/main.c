@@ -53,7 +53,7 @@ bool dicotomic_search(unsigned int v[], int lenght, int var){
     bool trobat=false;
 
     while(inf<=sup && !trobat){
-        cent=(sup-inf)/2
+        cent=(sup-inf)/2;
         if(v[cent]==var){
             trobat=true;
         }
@@ -64,6 +64,7 @@ bool dicotomic_search(unsigned int v[], int lenght, int var){
             else inf = cent;
         }
     }
+    return trobat;
 }
 
 int main()
