@@ -4,9 +4,10 @@
 #include <conio.h>  // En entorns Unix aquesta llibreria no funciona i podem utilitzar la equivalent ncurses.h
 #include <time.h>
 #include <windows.h>
+#include <math.h>
 
 #define N 20
-#define NUM_REPETICIONS 1
+#define NUM_REPETICIONS 3
 #define NUM_ELEMENTS_ARRAY(x) (sizeof(x)/sizeof(x)[0]);
 
 
@@ -96,117 +97,57 @@ int insercio(unsigned int v[], int length)
     }
     return cmpt;
 }
-void imprimeixMatriudouble(int num_proves,double m[][num_proves], int mides_vector[], int tipus)
+void imprimeixMatriudouble(int num_proves,double m[][num_proves], double d[][num_proves], int mides_vector[], int tipus)
 {
-    int i, j;
+    int i, j, columnesimpreses;
+
+    if (tipus<3) columnesimpreses=3;
+    else columnesimpreses = 2;
     printf("\n\n");
-    if (tipus == 1) printf ("Unitats de les dades: segons\n");
+    if (tipus%2 != 0) printf ("Unitats de les dades: segons\n");
     else printf ("Unitats de les dades: milions d'iteracions del bucle intern\n");
-    printf ("Elements\tBombolla\tSeleccio\tInsercio");
+    if (tipus < 3) printf ("Elements\tBombolla\tSeleccio\tInsercio");
+    else (printf ("Elements\tValor Present\tValor no Present"));
     for (j = 0; j < num_proves; j++)
     {
-        printf("\n* %i\t\t", mides_vector[j]);
-        for (i = 0; i < 3; i++)
+        printf("\n* %i\t", mides_vector[j]);
+        for (i = 0; i < columnesimpreses; i++)
         {
-            if (tipus == 1) printf("* %f\t", m[i][j]);
-            else printf("* %f\t", m[i][j]/1000000);
+            if (tipus == 1)
+            {
+                printf("* %f±%f ", m[i][j], d[i][j]);
+            }
+            else printf("* %f±%f ", m[i][j]/1000000, d[i][j]);
         }
     }
 }
-// Imprimeix per pantalla una matriu que relaciona el tipus d'algoritme utilitzat amb la mida del vector
-// No utilitza el vector del main ja que per a fer less diferents proves hem de redefinir la mida del vector en temps d'execució
-void mesures_temps()
-{
-    LARGE_INTEGER frequency;
-    LARGE_INTEGER start;
-    LARGE_INTEGER end;
-    double interval;
-
-    int mida_vector[] = {10, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 50000}; // mida que tindra el vector a ordenar en cada una de les proves amb diferent mida
-    int i, j, length_v, acumulador_i;
-    double acumulador;  // Acumula els segons al llarg de les repeticions per a fer la mitjana aritmetica
-    int num_proves = NUM_ELEMENTS_ARRAY(mida_vector); // Obté el nombre de proves (nombre de files de la matriu de resultats mat_t)
-    double mat_t[3][num_proves];    // matriu amb les mitjanes de temps amb el format descrit a la documentacio
-    double mat_i[3][num_proves];    // matriu amb les mitjanes de iteracions
-    // Columna per a l'algoritme de bombolla
-    for (j = 0; j < num_proves; j++)
-    {
-        unsigned int v[mida_vector[j]];
-        length_v = NUM_ELEMENTS_ARRAY(v);
-        acumulador = 0;
-        acumulador_i = 0;
-        for (i=0 ; i < NUM_REPETICIONS; i++)
-        {
-            ompleVectorAleatoriament(v, length_v);
-            QueryPerformanceFrequency(&frequency);
-            QueryPerformanceCounter(&start);
-            acumulador_i += bombolla(v, length_v);
-            QueryPerformanceCounter(&end);
-            interval = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            acumulador = acumulador + interval;
-        }
-        mat_t[0][j] = acumulador/(double)NUM_REPETICIONS;
-        mat_i[0][j] = acumulador_i/(double)NUM_REPETICIONS;
+//funcio per a calcular la desviacio estandar d'un vector de dades
+float desvest (float dades[], int midaVector){
+    float suma = 0.0;
+    float mitjana, devStand = 0.0;
+    int i;
+    //sumatori de totes les dades
+    for (i=0; i<midaVector; i++){
+        suma += dades[i];
     }
-
-// Columna per a l'algoritme de selecció
-    for (j = 0; j < num_proves; j++)
-    {
-        unsigned int v[mida_vector[j]];
-        length_v = NUM_ELEMENTS_ARRAY(v);
-        acumulador = 0;
-        acumulador_i = 0;
-        for (i=0 ; i < NUM_REPETICIONS; i++)
-        {
-            ompleVectorAleatoriament(v, length_v);
-            QueryPerformanceFrequency(&frequency);
-            QueryPerformanceCounter(&start);
-            acumulador_i += selection_sort(v, length_v);
-            QueryPerformanceCounter(&end);
-            interval = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            acumulador = acumulador + interval;
-        }
-        mat_t[1][j] = acumulador/(double)NUM_REPETICIONS;
-        mat_i[1][j] = acumulador_i/(double)NUM_REPETICIONS;
+    //calcular a mitjana
+    mitjana = suma/midaVector;
+    //calcular desviacio
+    for (i=0; i<midaVector; i++){
+        devStand += pow(dades[i]-mitjana, 2);
     }
-    // Columna per a l'algoritme de insercio
-
-    for (j = 0; j < num_proves; j++)
-    {
-        unsigned int v[mida_vector[j]];
-        length_v = NUM_ELEMENTS_ARRAY(v);
-        acumulador = 0;
-        acumulador_i = 0;
-        for (i=0 ; i < NUM_REPETICIONS; i++)
-        {
-            ompleVectorAleatoriament(v, length_v);
-            QueryPerformanceFrequency(&frequency);
-            QueryPerformanceCounter(&start);
-            acumulador_i += insercio(v, length_v);
-            QueryPerformanceCounter(&end);
-            interval = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            acumulador = acumulador + interval;
-        }
-        mat_t[2][j] = acumulador/(double)NUM_REPETICIONS;
-        mat_i[2][j] = acumulador_i/(double)NUM_REPETICIONS;
-    }
-    imprimeixMatriudouble(num_proves, mat_t, mida_vector, 1);
-    imprimeixMatriudouble(num_proves, mat_i, mida_vector, 2);
-
+    //retornem l'arrel quadrada
+    return sqrt(devStand/midaVector);
 }
 
-// Mostra el menu d'opcions i evita que l'usuari esculli una opcio incorrecta
-int opcio ()
+//Omple el vector ordenadament amb valors multiples de 2
+void ompleVectorOrdenadament(unsigned int v[], int length_v)
 {
-    int c=0;
-    while (1){
-    printf ("\nQue vols fer?\n1.-Seleccio\n2.-Bombolla\n3.-Insercio\n4.-Cerca dicotomica\n5.-Taula de resultats (tarda uns quant segons)\n6.-Reomplir vector\n7.-Visualitzar contingut del vector\n8.-Sortir\t\t->");
-    c = getche();
-    if (c < 49 || c > 56) printf ("\n\nOpcio incorrecta, torna-ho a intentar...");
-    else break;
+    int i;
+    for (i=0; i<length_v; i++)
+    {
+        v[i]=2*i;
     }
-    //return (c - 48);
-    return c;
 }
 
 // Cerca un valor dins del vector i retorna fals o cert segons si l'ha trobat
@@ -233,6 +174,255 @@ bool dicotomic_search(unsigned int v[], int lenght, int var, int *counter){
     return trobat;
 }
 
+// Imprimeix per pantalla una matriu que relaciona el tipus d'algoritme utilitzat amb la mida del vector
+// Non mas utilitza el vector del main ja que per a fer les diferents proves hem de redefinir la mida del vector en temps d'execució
+void mesures_temps()
+{
+    //Variables per a calcular el temps
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER start;
+    LARGE_INTEGER end;
+
+    int mida_vector[] = {10, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 25000}; // mida que tindra el vector a ordenar en cada una de les proves amb diferent mida
+    int i, j, length_v, acumulador_i;
+    double acumulador;  // Acumula els segons al llarg de les repeticions per a fer la mitjana aritmetica
+    int num_proves = NUM_ELEMENTS_ARRAY(mida_vector); // Obté el nombre de proves (nombre de files de la matriu de resultats mat_t) utilitzant la macro definida
+    float dades_t[NUM_REPETICIONS], dades_i[NUM_REPETICIONS];    // Definim dues taules de flotants per a acumular mostres i fer desvest
+    double mat_t[3][num_proves], mat_t_desvest[3][num_proves];    // matriu amb les mitjanes de temps amb el format descrit a la documentacio
+    double mat_i[3][num_proves], mat_i_desvest[3][num_proves];    // matriu amb les mitjanes de iteracions
+    // Columna per a l'algoritme de bombolla
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v);
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = bombolla(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[0][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[0][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[0][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[0][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+        // Columna per a l'algoritme de selecció
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v);
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = selection_sort(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[1][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[1][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[1][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[1][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+        // Columna per a l'algoritme de insercio
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v);
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = insercio(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[2][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[2][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[2][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[2][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+    //imprimir per pantalla
+    imprimeixMatriudouble(num_proves, mat_t, mat_t_desvest, mida_vector, 1);
+    imprimeixMatriudouble(num_proves, mat_i, mat_i_desvest, mida_vector, 2);
+
+    // CASOS AMB EL VECTOR JA ORDENAT
+    printf("\n\nCAS MILLOR\n");
+    // Columna per a l'algoritme de bombolla
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v); // omplim el vector
+            insercio(v, length_v); // L'ordenem amb un algoritme arbitrari, i duem a terme les mateixes proves
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = bombolla(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[0][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[0][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[0][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[0][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+        // Columna per a l'algoritme de selecció
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v);
+            insercio(v, length_v); // L'ordenem amb un algoritme arbitrari, i duem a terme les mateixes proves
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = selection_sort(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[1][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[1][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[1][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[1][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+        // Columna per a l'algoritme de insercio
+    for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v);
+            insercio(v, length_v); // L'ordenem amb un algoritme arbitrari, i duem a terme les mateixes proves
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dades_i[i] = insercio(v, length_v);
+            acumulador_i += dades_i[i];
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador = acumulador + dades_t[i];
+        }
+        mat_t[2][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[2][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[2][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[2][j] = desvest(dades_i, NUM_REPETICIONS);
+
+    }
+    //imprimir per pantalla
+    imprimeixMatriudouble(num_proves, mat_t, mat_t_desvest, mida_vector, 1);
+    imprimeixMatriudouble(num_proves, mat_i, mat_i_desvest, mida_vector, 2);
+
+    //Algoritme de cerca dicotomica
+    printf ("\n\n Algoritme de cerca dicotomica\n\n");
+    // Cas de que el valor ja es troba
+    int iteracions=0;
+     for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorAleatoriament(v, length_v); //Omplim el vector
+            insercio(v, length_v);  //L'ordenem
+            iteracions = 0; // Iniciem comptador
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dicotomic_search(v, length_v, v[rand()%mida_vector[j]], &iteracions); //Li passem una posicio dins del vector que sabem que existeix
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador += dades_t[i];
+            acumulador_i += iteracions; // acumulem per a la mitjana
+            dades_i[i] = iteracions;  // guardem a la taula per a desvest
+        }
+        mat_t[0][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[0][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[0][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[0][j] = desvest(dades_i, NUM_REPETICIONS);
+    }
+
+    //Cas de que el valor no es trobi
+    int value;
+
+      for (j = 0; j < num_proves; j++)
+    {
+        unsigned int v[mida_vector[j]];
+        length_v = NUM_ELEMENTS_ARRAY(v);
+        acumulador = 0;
+        acumulador_i = 0;   // En aquet algoritme no acumulen res pero reaprofitem les variables, contenen el resultat de cada iteracio e temps i iteracions
+        for (i=0 ; i < NUM_REPETICIONS; i++)
+        {
+            ompleVectorOrdenadament(v, length_v); //Omplim el vector
+            value = rand();
+            if (value % 2 == 0) value++;
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
+            dicotomic_search(v, length_v, value, &iteracions); //Li passem una posicio dins del vector que sabem que no existeix
+            QueryPerformanceCounter(&end);
+            dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            acumulador += dades_t[i];
+            acumulador_i += iteracions; // acumulem per a la mitjana
+            dades_i[i] = iteracions;  // guardem a la taula per a desvest
+        }
+        mat_t[1][j] = acumulador/(double)NUM_REPETICIONS;
+        mat_i[1][j] = acumulador_i/(double)NUM_REPETICIONS;
+        mat_t_desvest[1][j] = desvest(dades_t, NUM_REPETICIONS);
+        mat_i_desvest[1][j] = desvest(dades_i, NUM_REPETICIONS);
+    }
+    imprimeixMatriudouble(num_proves, mat_t, mat_t_desvest, mida_vector, 3);
+    imprimeixMatriudouble(num_proves, mat_i, mat_i_desvest, mida_vector, 4);
+}
+
+// Mostra el menu d'opcions i evita que l'usuari esculli una opcio incorrecta
+int opcio ()
+{
+    int c=0;
+    while (1){
+    printf ("\nQue vols fer?\n1.-Seleccio\n2.-Bombolla\n3.-Insercio\n4.-Cerca dicotomica\n5.-Taula de resultats (tarda uns quant segons)\n6.-Reomplir vector\n7.-Visualitzar contingut del vector\n8.-Sortir\t\t->");
+    c = getche();
+    if (c < 49 || c > 56) printf ("\n\nOpcio incorrecta, torna-ho a intentar...");
+    else break;
+    }
+    return (c - 48);
+    //return c;
+}
+
 int main()
 {
     unsigned int v[100], valor;
@@ -253,7 +443,7 @@ int main()
                 if (dicotomic_search(v, midaVector, valor, &counter)) printf("\n\nEl valor es troba dins del nostre vector i ha tardat %d iteracions",counter);
                     else printf("\n\nEl valor no es troba dins del nostre vector i ha tardat %d iteracions",counter);
                 break;
-            case 5: //mesures_temps(v, midaVector); break;
+            case 5: mesures_temps(v, midaVector); break;
             case 6: ompleVectorAleatoriament(v, midaVector); break;
             case 7: visualitza(v, midaVector); break;
             case 8: return 0;
