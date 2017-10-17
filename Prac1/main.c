@@ -104,8 +104,10 @@ void imprimeixMatriudouble(int num_proves,double m[][num_proves], double d[][num
     if (tipus<3) columnesimpreses=3;
     else columnesimpreses = 2;
     printf("\n\n");
-    if (tipus%2 != 0) printf ("Unitats de les dades: segons\n");
-    else printf ("Unitats de les dades: milions d'iteracions del bucle intern\n");
+    if (tipus== 1) printf ("Unitats de les dades: segons\n");
+    else if (tipus == 2) printf ("Unitats de les dades: milions d'iteracions del bucle intern\n");
+    else if (tipus == 3) printf ("Unitats de les dades: microsegons\n");
+    else if (tipus == 4) printf ("Unitats de les dades: iteracions del bucle intern\n");
     if (tipus < 3) printf ("Elements\tBombolla\tSeleccio\tInsercio");
     else (printf ("Elements\tValor Present\tValor no Present"));
     for (j = 0; j < num_proves; j++)
@@ -113,11 +115,10 @@ void imprimeixMatriudouble(int num_proves,double m[][num_proves], double d[][num
         printf("\n* %i\t", mides_vector[j]);
         for (i = 0; i < columnesimpreses; i++)
         {
-            if (tipus == 1)
-            {
-                printf("* %f±%f ", m[i][j], d[i][j]);
-            }
-            else printf("* %f±%f ", m[i][j]/1000000, d[i][j]);
+            if (tipus == 1) printf("* %f±%f ", m[i][j], d[i][j]);
+            else if (tipus==2) printf("* %f±%f ", m[i][j]/1000000, d[i][j]/1000000);
+            else if (tipus==3) printf ("* %f±%f ", m[i][j]*1000000, d[i][j]*1000000);
+            else if (tipus==4) printf ("* %f±%f ", m[i][j], d[i][j]);
         }
     }
 }
@@ -183,7 +184,7 @@ void mesures_temps()
     LARGE_INTEGER start;
     LARGE_INTEGER end;
 
-    int mida_vector[] = {10, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 25000}; // mida que tindra el vector a ordenar en cada una de les proves amb diferent mida
+    int mida_vector[] = {10, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 100000}; // mida que tindra el vector a ordenar en cada una de les proves amb diferent mida
     int i, j, length_v, acumulador_i;
     double acumulador;  // Acumula els segons al llarg de les repeticions per a fer la mitjana aritmetica
     int num_proves = NUM_ELEMENTS_ARRAY(mida_vector); // Obté el nombre de proves (nombre de files de la matriu de resultats mat_t) utilitzant la macro definida
@@ -350,7 +351,7 @@ void mesures_temps()
     //Algoritme de cerca dicotomica
     printf ("\n\n Algoritme de cerca dicotomica\n\n");
     // Cas de que el valor ja es troba
-    int iteracions=0;
+    int iteracions;
      for (j = 0; j < num_proves; j++)
     {
         unsigned int v[mida_vector[j]];
@@ -367,7 +368,7 @@ void mesures_temps()
             dicotomic_search(v, length_v, v[rand()%mida_vector[j]], &iteracions); //Li passem una posicio dins del vector que sabem que existeix
             QueryPerformanceCounter(&end);
             dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            acumulador += dades_t[i];
+            acumulador = acumulador + dades_t[i];
             acumulador_i += iteracions; // acumulem per a la mitjana
             dades_i[i] = iteracions;  // guardem a la taula per a desvest
         }
@@ -385,7 +386,7 @@ void mesures_temps()
         unsigned int v[mida_vector[j]];
         length_v = NUM_ELEMENTS_ARRAY(v);
         acumulador = 0;
-        acumulador_i = 0;   // En aquet algoritme no acumulen res pero reaprofitem les variables, contenen el resultat de cada iteracio e temps i iteracions
+        acumulador_i = 0;
         for (i=0 ; i < NUM_REPETICIONS; i++)
         {
             ompleVectorOrdenadament(v, length_v); //Omplim el vector
@@ -396,7 +397,7 @@ void mesures_temps()
             dicotomic_search(v, length_v, value, &iteracions); //Li passem una posicio dins del vector que sabem que no existeix
             QueryPerformanceCounter(&end);
             dades_t[i] = (double) (end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            acumulador += dades_t[i];
+            acumulador = acumulador + dades_t[i];
             acumulador_i += iteracions; // acumulem per a la mitjana
             dades_i[i] = iteracions;  // guardem a la taula per a desvest
         }
