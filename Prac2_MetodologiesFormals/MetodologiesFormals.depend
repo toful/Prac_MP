@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1509637034 source:c:\users\crizl\documents\mp\metodologiesformals\metodologiesformals\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<conio.h>
+	<assert.h>
+
+1510013756 source:c:\users\pc\documents\metodologiesformals\metodologiesformals\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<conio.h>
+	<assert.h>
+	<time.h>
+
+1510042206 source:c:\users\cristobal\dropbox\uni\4t curs\mp\prac_mp\metodologiesformals\metodologiesformals\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<conio.h>
+	<assert.h>
+	<time.h>
+
